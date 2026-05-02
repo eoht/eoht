@@ -1,283 +1,549 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eunice Home Café</title>
+import { useState } from “react”;
 
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<style>
-:root {
-  --cream: #F5EDD8;
-  --gold: #D4A853;
-  --matcha: #7A9E5F;
-  --midnight: #160F06;
-  --surface: #1E1509;
-}
-
-* { margin:0; padding:0; box-sizing:border-box; }
-
-body {
-  background: var(--midnight);
-  color: var(--cream);
-  font-family: 'DM Sans', sans-serif;
-}
-
-.app {
-  max-width: 420px;
-  margin: auto;
-  padding: 20px;
-}
-
-h1 {
-  font-family: 'Cormorant Garamond', serif;
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.step { margin-bottom: 20px; }
-
-.opt-btn {
-  display:block;
-  width:100%;
-  margin:6px 0;
-  padding:12px;
-  border-radius:10px;
-  border:1px solid #555;
-  background:#222;
-  color:#eee;
-}
-
-.opt-btn.selected {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.generate-btn {
-  width:100%;
-  padding:16px;
-  border:none;
-  border-radius:12px;
-  background: var(--gold);
-  color:black;
-  font-weight:bold;
-  margin-top:20px;
-}
-
-.result {
-  margin-top:20px;
-  padding:15px;
-  background: var(--surface);
-  border-radius:12px;
-}
-</style>
-</head>
-
-<body>
-
-<div class="app">
-
-<h1>Eunice Home Café</h1>
-
-<div class="step">
-  <p>Drink type</p>
-  <button class="opt-btn" onclick="pick(this,'coffee')">Coffee</button>
-  <button class="opt-btn" onclick="pick(this,'matcha')">Matcha</button>
-  <button class="opt-btn" onclick="pick(this,'tea')">Tea</button>
-  <button class="opt-btn" onclick="pick(this,'cocktail')">Cocktail</button>
-</div>
-
-<div class="step">
-  <p>Mood</p>
-  <button class="opt-btn" onclick="pick(this,'cozy')">Cozy</button>
-  <button class="opt-btn" onclick="pick(this,'refreshing')">Fresh</button>
-  <button class="opt-btn" onclick="pick(this,'indulgent')">Indulgent</button>
-  <button class="opt-btn" onclick="pick(this,'energizing')">Energizing</button>
-</div>
-
-<button class="generate-btn" onclick="generate()">Craft Menu</button>
-
-<div id="results"></div>
-
-</div>
-
-<script>
-
-// ─────────────────────────────
-// FULL DRINK LIBRARY
-// ─────────────────────────────
-const DRINK_LIBRARY = [
+const DRINKS = [
 {
-  name: "Velvet Oat Latte",
-  type: "coffee",
-  mood: "cozy",
-  desc: "Warm oat latte with soft cinnamon finish."
+id: “classic-cold-brew”,
+name: “Classic Cold Brew”,
+emoji: “🖤”,
+description: “Smooth, low-acid cold brew steeped overnight”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“focused”, “energised”], base: “coffee”, flavour: [“bold”, “smooth”], effort: “easy” },
+difficulty: “Easy”, time: “12–18 hrs”, servings: 4,
+ingredients: [“100g coarsely ground coffee”, “700ml cold filtered water”, “Ice cubes”],
+steps: [“Combine coffee grounds and cold water in a large jar or pitcher.”, “Stir gently to saturate all grounds.”, “Cover and refrigerate for 12–18 hours.”, “Strain through cheesecloth or a coffee filter into a clean jar.”, “Serve over ice, diluted 1:1 with water or milk to taste.”],
+tip: “Use a medium-dark roast. Concentrate keeps for 2 weeks in the fridge.”,
 },
 {
-  name: "Iced Caramel Cloud Latte",
-  type: "coffee",
-  mood: "indulgent",
-  desc: "Sweet caramel espresso with creamy foam."
+id: “vanilla-sweet-cream”,
+name: “Vanilla Sweet Cream Cold Brew”,
+emoji: “🤍”,
+description: “Velvety cold foam floats atop rich cold brew”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“indulgent”, “cosy”], base: “coffee”, flavour: [“sweet”, “creamy”], effort: “medium” },
+difficulty: “Medium”, time: “12 hrs + 5 min”, servings: 2,
+ingredients: [“120ml cold brew concentrate”, “120ml cold water or oat milk”, “Ice cubes”, “60ml heavy cream or coconut cream”, “2 tbsp vanilla syrup”, “Pinch of salt”],
+steps: [“Make cold brew concentrate (Classic recipe).”, “Fill a tall glass with ice and pour in cold brew + milk.”, “Sweeten with vanilla syrup.”, “Froth heavy cream, 1 tsp vanilla syrup, and a pinch of salt until thick and pourable.”, “Slowly pour sweet cream over the back of a spoon on top.”, “Sip through the cream layer.”],
+tip: “Oat-based heavy cream works beautifully dairy-free.”,
 },
 {
-  name: "Midnight Cold Brew",
-  type: "coffee",
-  mood: "energizing",
-  desc: "Bold cold brew with vanilla and sea salt."
+id: “brown-sugar-cinnamon”,
+name: “Brown Sugar Cinnamon Cold Brew”,
+emoji: “🤎”,
+description: “Warm spice meets cold coffee — a cosy contradiction”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“cosy”, “indulgent”], base: “coffee”, flavour: [“sweet”, “spiced”], effort: “easy” },
+difficulty: “Easy”, time: “12 hrs + 5 min”, servings: 2,
+ingredients: [“240ml cold brew concentrate”, “2 tbsp brown sugar”, “¼ tsp cinnamon”, “Splash of hot water”, “240ml oat milk”, “Ice cubes”],
+steps: [“Dissolve brown sugar and cinnamon in hot water to make a syrup. Let cool.”, “Fill glasses with ice.”, “Add 1 tbsp cinnamon syrup per glass.”, “Pour cold brew then oat milk.”, “Stir lightly and dust with cinnamon.”],
+tip: “Double the syrup batch and refrigerate for up to 2 weeks.”,
 },
 {
-  name: "Honey Cinnamon Latte",
-  type: "coffee",
-  mood: "cozy",
-  desc: "Smooth espresso with honey spice warmth."
+id: “jasmine-green”,
+name: “Jasmine Green Cold Brew”,
+emoji: “🌸”,
+description: “Floral, delicate, and impossibly refreshing”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“relaxed”, “refreshed”], base: “tea”, flavour: [“floral”, “light”], effort: “easy” },
+difficulty: “Easy”, time: “8–10 hrs”, servings: 4,
+ingredients: [“4 tsp loose jasmine green tea”, “800ml cold filtered water”, “Ice cubes”, “Optional: lemon slices, honey”],
+steps: [“Place tea in a pitcher with cold water.”, “Cover and refrigerate 8–10 hours.”, “Remove tea leaves.”, “Serve over ice with optional lemon or honey.”],
+tip: “Cold brewing prevents bitterness. Never steep more than 12 hours.”,
 },
 {
-  name: "Dirty Vanilla Latte",
-  type: "coffee",
-  mood: "energizing",
-  desc: "Strong espresso with soft vanilla milk."
+id: “hibiscus-mint”,
+name: “Hibiscus Mint Cold Brew”,
+emoji: “🌺”,
+description: “Vivid crimson, tart and bright with cooling mint”,
+tags: { caffeinated: false, alcoholic: false, hot: false, iced: true, mood: [“refreshed”, “energised”], base: “tea”, flavour: [“fruity”, “floral”], effort: “easy” },
+difficulty: “Easy”, time: “6–8 hrs”, servings: 4,
+ingredients: [“3 tbsp dried hibiscus flowers”, “6 fresh mint leaves”, “800ml cold water”, “2 tbsp honey or agave”, “Ice & mint sprigs to garnish”],
+steps: [“Combine hibiscus and mint in a pitcher.”, “Add cold water and dissolve sweetener.”, “Cover and refrigerate 6–8 hours.”, “Strain and serve over ice with fresh mint.”],
+tip: “The natural colour is stunning — serve in a clear glass.”,
 },
 {
-  name: "Ceremonial Matcha Cloud",
-  type: "matcha",
-  mood: "cozy",
-  desc: "Light airy matcha with oat milk foam."
+id: “peach-oolong”,
+name: “Peach Oolong Cold Brew”,
+emoji: “🍑”,
+description: “Fruity and mellow — summer in a glass”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“relaxed”, “refreshed”], base: “tea”, flavour: [“fruity”, “smooth”], effort: “easy” },
+difficulty: “Easy”, time: “8–12 hrs”, servings: 4,
+ingredients: [“4 tsp oolong tea leaves”, “2 ripe peaches sliced”, “700ml cold filtered water”, “1 tbsp honey”, “Ice cubes”],
+steps: [“Combine oolong, peach slices, cold water, and honey in a pitcher.”, “Cover and refrigerate 8–12 hours.”, “Strain and discard solids.”, “Serve over ice with a fresh peach slice.”],
+tip: “Frozen peaches work year-round.”,
 },
 {
-  name: "Iced Strawberry Matcha",
-  type: "matcha",
-  mood: "refreshing",
-  desc: "Fruity matcha with strawberry brightness."
+id: “london-fog”,
+name: “London Fog”,
+emoji: “🫖”,
+description: “Earl Grey meets silky steamed milk and a whisper of vanilla”,
+tags: { caffeinated: true, alcoholic: false, hot: true, iced: false, mood: [“cosy”, “relaxed”], base: “tea”, flavour: [“floral”, “creamy”], effort: “easy” },
+difficulty: “Easy”, time: “8 min”, servings: 1,
+ingredients: [“2 Earl Grey tea bags”, “120ml boiling water”, “120ml oat milk”, “1 tsp vanilla extract”, “1 tsp honey”],
+steps: [“Steep Earl Grey in 120ml boiling water for 4–5 min. Remove bags.”, “Stir in vanilla and sweetener.”, “Heat oat milk and froth until foamy.”, “Pour hot tea into mug, then pour frothed milk on top.”],
+tip: “Add a drop of lavender syrup for a floral twist.”,
 },
 {
-  name: "Dirty Matcha Latte",
-  type: "matcha",
-  mood: "energizing",
-  desc: "Bold espresso meets earthy matcha."
+id: “hojicha”,
+name: “Hojicha Latte”,
+emoji: “🍂”,
+description: “Roasted, toasty, deeply comforting Japanese tea latte”,
+tags: { caffeinated: false, alcoholic: false, hot: true, iced: false, mood: [“cosy”, “relaxed”], base: “tea”, flavour: [“roasty”, “smooth”], effort: “easy” },
+difficulty: “Easy”, time: “8 min”, servings: 1,
+ingredients: [“2 tsp hojicha powder”, “60ml hot water (80°C)”, “180ml oat or whole milk”, “1 tsp honey”],
+steps: [“Whisk hojicha with hot water until smooth.”, “Sweeten with honey.”, “Heat and froth milk until velvety.”, “Pour frothed milk over hojicha base.”, “Dust with extra hojicha powder.”],
+tip: “Hojicha is naturally low in caffeine — perfect for evenings.”,
 },
 {
-  name: "Brown Sugar Matcha Latte",
-  type: "matcha",
-  mood: "indulgent",
-  desc: "Sweet brown sugar with chewy boba."
+id: “dirty-chai”,
+name: “Dirty Chai Latte”,
+emoji: “♨️”,
+description: “Spiced chai meets a bold espresso shot — best of both worlds”,
+tags: { caffeinated: true, alcoholic: false, hot: true, iced: false, mood: [“energised”, “cosy”], base: “coffee”, flavour: [“spiced”, “bold”], effort: “medium” },
+difficulty: “Medium”, time: “12 min”, servings: 1,
+ingredients: [“1 chai tea bag”, “90ml hot water”, “1 shot espresso”, “150ml oat milk”, “1 tsp brown sugar”, “Pinch of cinnamon”],
+steps: [“Brew chai for 5 minutes. Remove bag and sweeten.”, “Add espresso shot.”, “Steam and froth oat milk.”, “Pour frothed milk over chai-espresso base.”, “Dust with cinnamon.”],
+tip: “For iced: combine chai + espresso over ice, top with cold-frothed milk.”,
 },
 {
-  name: "Jasmine Milk Tea Latte",
-  type: "tea",
-  mood: "cozy",
-  desc: "Floral jasmine tea with creamy milk."
+id: “classic-matcha”,
+name: “Classic Iced Matcha Latte”,
+emoji: “🍵”,
+description: “Vibrant green, creamy, perfectly balanced”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“focused”, “refreshed”], base: “matcha”, flavour: [“earthy”, “creamy”], effort: “easy” },
+difficulty: “Easy”, time: “5 min”, servings: 1,
+ingredients: [“2 tsp ceremonial grade matcha”, “60ml hot water (70–80°C)”, “200ml oat milk”, “1 tsp honey or vanilla syrup”, “Ice cubes”],
+steps: [“Sift matcha into a small bowl.”, “Add hot water and whisk in a ‘W’ motion until frothy (30–60 sec).”, “Stir in sweetener.”, “Fill a glass with ice and pour in oat milk.”, “Float matcha concentrate on top. Stir to combine.”],
+tip: “Sift to prevent clumps. Use 70°C water — boiling makes matcha bitter.”,
 },
 {
-  name: "Brown Sugar Boba Milk Tea",
-  type: "tea",
-  mood: "indulgent",
-  desc: "Rich milk tea with caramel boba."
+id: “strawberry-matcha”,
+name: “Strawberry Matcha Latte”,
+emoji: “🍓”,
+description: “Pink and green layers — beautiful and delicious”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“indulgent”, “refreshed”], base: “matcha”, flavour: [“fruity”, “creamy”], effort: “medium” },
+difficulty: “Medium”, time: “10 min”, servings: 1,
+ingredients: [“2 tsp ceremonial matcha”, “60ml hot water (75°C)”, “200ml oat milk”, “4–5 fresh strawberries”, “1 tbsp honey”, “Ice cubes”],
+steps: [“Blend strawberries with honey until smooth.”, “Whisk matcha with hot water until frothy.”, “Fill glass with ice.”, “Pour strawberry puree over ice.”, “Layer oat milk slowly over the back of a spoon.”, “Float matcha on top.”],
+tip: “Frozen strawberries also work — thaw slightly before blending.”,
 },
 {
-  name: "Oolong Cream Tea",
-  type: "tea",
-  mood: "refreshing",
-  desc: "Smooth oolong with vanilla cream notes."
+id: “coconut-matcha”,
+name: “Coconut Matcha Latte”,
+emoji: “🥥”,
+description: “Tropical and creamy with a hint of sweetness”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“relaxed”, “indulgent”], base: “matcha”, flavour: [“creamy”, “smooth”], effort: “easy” },
+difficulty: “Easy”, time: “5 min”, servings: 1,
+ingredients: [“2 tsp matcha powder”, “60ml hot water”, “180ml full-fat coconut milk”, “1 tsp agave or maple syrup”, “Ice cubes”, “Toasted coconut flakes (garnish)”],
+steps: [“Whisk matcha with hot water until smooth.”, “Sweeten with agave.”, “Fill glass with ice.”, “Pour coconut milk over ice.”, “Float matcha on top.”, “Garnish with toasted coconut flakes.”],
+tip: “Shake the coconut milk can before opening for a creamier texture.”,
 },
 {
-  name: "Earl Grey Velvet Tea",
-  type: "tea",
-  mood: "cozy",
-  desc: "Aromatic Earl Grey with soft milk finish."
+id: “dalgona”,
+name: “Dalgona Coffee”,
+emoji: “☁️”,
+description: “Whipped cloud of coffee atop cold milk”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“indulgent”, “playful”], base: “coffee”, flavour: [“sweet”, “bold”], effort: “easy” },
+difficulty: “Easy”, time: “10 min”, servings: 2,
+ingredients: [“2 tbsp instant coffee”, “2 tbsp sugar”, “2 tbsp hot water”, “400ml cold oat milk”, “Ice cubes”],
+steps: [“Whisk instant coffee, sugar, and hot water for 3–5 min until stiff glossy peaks.”, “Fill glasses with ice and cold milk.”, “Spoon coffee foam on top.”, “Swirl slightly before drinking.”],
+tip: “The ratio is always 1:1:1 (coffee:sugar:water). Don’t skip the sugar — it stabilises the foam.”,
 },
 {
-  name: "Yuzu Gin Spritz",
-  type: "cocktail",
-  mood: "refreshing",
-  desc: "Citrus gin spritz with sparkling soda."
+id: “shaken-espresso”,
+name: “Shaken Espresso”,
+emoji: “🧊”,
+description: “Silky, frothy espresso shaken over ice”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“energised”, “focused”], base: “coffee”, flavour: [“bold”, “smooth”], effort: “easy” },
+difficulty: “Easy”, time: “5 min”, servings: 1,
+ingredients: [“2 shots espresso”, “2 tsp vanilla syrup”, “Handful of ice”, “Splash of oat milk”],
+steps: [“Pull espresso and let cool 30 seconds.”, “Add espresso, syrup, and ice to a cocktail shaker.”, “Shake vigorously for 30 seconds until frothy.”, “Strain into a glass over fresh ice.”, “Top with a splash of oat milk.”],
+tip: “Shaking emulsifies the espresso for silky texture and micro-foam.”,
 },
 {
-  name: "Vanilla Rum Sunset",
-  type: "cocktail",
-  mood: "indulgent",
-  desc: "Warm vanilla rum with orange glow."
+id: “ca-phe-sua-da”,
+name: “Vietnamese Iced Coffee”,
+emoji: “🇻🇳”,
+description: “Bold dark roast + sweetened condensed milk over crushed ice”,
+tags: { caffeinated: true, alcoholic: false, hot: false, iced: true, mood: [“energised”, “indulgent”], base: “coffee”, flavour: [“bold”, “sweet”], effort: “medium” },
+difficulty: “Medium”, time: “10 min”, servings: 1,
+ingredients: [“2 tbsp coarsely ground dark roast coffee”, “120ml boiling water”, “2 tbsp sweetened condensed milk”, “Crushed ice”],
+steps: [“Spoon condensed milk into a glass.”, “Brew strong dark coffee (phin filter or Moka pot).”, “Stir hot coffee and condensed milk together.”, “Pour over a tall glass of crushed ice.”],
+tip: “Authentic phin filters are inexpensive online and make the real deal.”,
 },
 {
-  name: "Espresso Martini Twist",
-  type: "cocktail",
-  mood: "energizing",
-  desc: "Bold coffee cocktail with vodka kick."
+id: “espresso-martini”,
+name: “Espresso Martini”,
+emoji: “🍸”,
+description: “The cocktail that wakes you up and slows you down”,
+tags: { caffeinated: true, alcoholic: true, hot: false, iced: true, mood: [“indulgent”, “playful”], base: “coffee”, flavour: [“bold”, “sweet”], effort: “medium” },
+difficulty: “Medium”, time: “8 min”, servings: 1,
+ingredients: [“45ml vodka”, “30ml fresh espresso (cooled)”, “15ml coffee liqueur (Kahlúa)”, “10ml simple syrup”, “Ice”, “3 coffee beans (garnish)”],
+steps: [“Pull espresso and cool for 2–3 minutes.”, “Fill a cocktail shaker with ice.”, “Add vodka, espresso, Kahlúa, and syrup.”, “Shake vigorously for 20–30 seconds for the frothy top.”, “Double strain into a chilled coupe glass.”, “Garnish with 3 coffee beans.”],
+tip: “Chill your glass beforehand. The harder you shake, the better the foam.”,
 },
 {
-  name: "Honey Whiskey Highball",
-  type: "cocktail",
-  mood: "cozy",
-  desc: "Smooth whiskey with honey warmth."
+id: “aperol-spritz”,
+name: “Aperol Spritz”,
+emoji: “🍊”,
+description: “Italy’s golden hour in a glass — bright, bitter, bubbly”,
+tags: { caffeinated: false, alcoholic: true, hot: false, iced: true, mood: [“relaxed”, “playful”], base: “other”, flavour: [“fruity”, “light”], effort: “easy” },
+difficulty: “Easy”, time: “3 min”, servings: 1,
+ingredients: [“90ml Prosecco”, “60ml Aperol”, “Splash of soda water”, “Ice”, “Orange slice to garnish”],
+steps: [“Fill a large wine glass with ice.”, “Pour in Prosecco first.”, “Add Aperol.”, “Top with a splash of soda water.”, “Gentle stir and garnish with an orange wheel.”],
+tip: “The classic ratio is 3:2:1 (Prosecco:Aperol:Soda). Always build in the glass.”,
 },
 {
-  name: "Rose Vanilla Cloud Latte",
-  type: "coffee",
-  mood: "indulgent",
-  desc: "Floral rose latte with vanilla foam."
+id: “matcha-gin-fizz”,
+name: “Matcha Gin Fizz”,
+emoji: “🌿”,
+description: “Botanical gin meets earthy matcha in an effervescent sip”,
+tags: { caffeinated: true, alcoholic: true, hot: false, iced: true, mood: [“playful”, “refreshed”], base: “matcha”, flavour: [“earthy”, “floral”], effort: “medium” },
+difficulty: “Medium”, time: “8 min”, servings: 1,
+ingredients: [“45ml London Dry gin”, “1 tsp ceremonial matcha”, “20ml fresh lemon juice”, “15ml simple syrup”, “Ice”, “60ml sparkling water”, “Lemon twist”],
+steps: [“Whisk matcha with 30ml cold water until smooth.”, “Add gin, lemon juice, syrup, and matcha to shaker with ice.”, “Shake for 15 seconds.”, “Strain into a Collins glass over fresh ice.”, “Top with sparkling water.”, “Garnish with a lemon twist.”],
+tip: “Use a floral gin like Hendrick’s or Roku to complement matcha’s earthiness.”,
 },
 {
-  name: "Lavender Night Tea",
-  type: "tea",
-  mood: "cozy",
-  desc: "Calming lavender tea for slow nights."
+id: “cold-brew-negroni”,
+name: “Cold Brew Negroni”,
+emoji: “🥃”,
+description: “The classic Negroni gets a cold brew upgrade — bold and complex”,
+tags: { caffeinated: true, alcoholic: true, hot: false, iced: true, mood: [“indulgent”, “focused”], base: “coffee”, flavour: [“bold”, “smooth”], effort: “easy” },
+difficulty: “Easy”, time: “5 min”, servings: 1,
+ingredients: [“30ml gin”, “30ml sweet vermouth”, “30ml Campari”, “30ml cold brew concentrate”, “Large ice cube”, “Orange peel”],
+steps: [“Fill a mixing glass with ice.”, “Add gin, vermouth, Campari, and cold brew.”, “Stir for 30 seconds until well chilled.”, “Strain into a rocks glass over a large ice cube.”, “Express an orange peel over the glass and drop in.”],
+tip: “Use a medium-roast cold brew concentrate for balance.”,
 },
-{
-  name: "Coconut Cloud Cold Brew",
-  type: "coffee",
-  mood: "refreshing",
-  desc: "Tropical coconut cold brew latte."
-}
 ];
 
-// ─────────────────────────────
-// STATE
-// ─────────────────────────────
-let selections = {};
+const QUIZ = [
+{
+id: “vibe”,
+question: “how are you feeling right now?”,
+sub: “let’s start with your mood”,
+options: [
+{ label: “I need to focus”, value: “focused”, emoji: “🧠” },
+{ label: “I want to unwind”, value: “relaxed”, emoji: “🌙” },
+{ label: “treat me, I deserve it”, value: “indulgent”, emoji: “✨” },
+{ label: “give me energy”, value: “energised”, emoji: “⚡️” },
+{ label: “something fun & playful”, value: “playful”, emoji: “🎲” },
+{ label: “feeling fresh & light”, value: “refreshed”, emoji: “🌿” },
+{ label: “cosy & warm”, value: “cosy”, emoji: “☁️” },
+],
+filter: (drinks, v) => drinks.filter(d => d.tags.mood.includes(v)),
+},
+{
+id: “temp”,
+question: “hot or cold?”,
+sub: “tell me what sounds good right now”,
+options: [
+{ label: “hot & steamy please”, value: “hot”, emoji: “♨️” },
+{ label: “ice cold, always”, value: “iced”, emoji: “🧊” },
+{ label: “surprise me”, value: “any”, emoji: “🎲” },
+],
+filter: (drinks, v) => v === “any” ? drinks : drinks.filter(d => v === “hot” ? d.tags.hot : d.tags.iced),
+},
+{
+id: “alcohol”,
+question: “are we adding a little something?”,
+sub: “no judgement either way 😉”,
+options: [
+{ label: “yes, make it boozy”, value: “yes”, emoji: “🍸” },
+{ label: “no, keeping it clean”, value: “no”, emoji: “🌱” },
+{ label: “I’m open to either”, value: “any”, emoji: “🤷” },
+],
+filter: (drinks, v) => v === “any” ? drinks : drinks.filter(d => v === “yes” ? d.tags.alcoholic : !d.tags.alcoholic),
+},
+{
+id: “base”,
+question: “any base preference?”,
+sub: “your drink, your rules”,
+options: [
+{ label: “coffee”, value: “coffee”, emoji: “☕” },
+{ label: “tea”, value: “tea”, emoji: “🍵” },
+{ label: “matcha”, value: “matcha”, emoji: “🌿” },
+{ label: “whatever works”, value: “any”, emoji: “🎲” },
+],
+filter: (drinks, v) => v === “any” ? drinks : drinks.filter(d => d.tags.base === v),
+},
+{
+id: “effort”,
+question: “how much effort are we putting in today?”,
+sub: “be honest with yourself”,
+options: [
+{ label: “minimal — keep it quick”, value: “easy”, emoji: “😴” },
+{ label: “I’m in the mood to craft”, value: “medium”, emoji: “🧑‍🍳” },
+{ label: “either is fine”, value: “any”, emoji: “✌️” },
+],
+filter: (drinks, v) => v === “any” ? drinks : (v === “easy” ? drinks.filter(d => d.tags.effort === “easy”) : drinks),
+},
+];
 
-// FIXED PICK LOGIC
-function pick(btn, val){
-  const group = btn.parentElement;
-  group.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
+const PALETTES = {
+coffee: { accent: “#c87941”, dim: “#7a3d1a” },
+tea:    { accent: “#5cad6e”, dim: “#2a6e3a” },
+matcha: { accent: “#7ab855”, dim: “#3a6e20” },
+other:  { accent: “#e09030”, dim: “#8a5010” },
+};
 
-  const label = group.children[0].innerText.trim(); // "Drink type" / "Mood"
-  selections[label] = val;
+function palette(drink) {
+return PALETTES[drink?.tags?.base] || PALETTES.coffee;
 }
 
-// ─────────────────────────────
-// FILTER ENGINE (NO API)
-// ─────────────────────────────
-function generate(){
-  const el = document.getElementById('results');
-  el.innerHTML = "Brewing... ☕";
+export default function EuniceHomeCafe() {
+const [step, setStep] = useState(-1);
+const [pool, setPool] = useState(DRINKS);
+const [result, setResult] = useState(null);
+const [showRecipe, setShowRecipe] = useState(false);
 
-  const type = selections["Drink type"];
-  const mood = selections["Mood"];
+const q = QUIZ[step];
+const pal = result ? palette(result) : { accent: “#d4956a”, dim: “#7a4520” };
 
-  let results = DRINK_LIBRARY;
+const answer = (val) => {
+const filtered = q.filter(pool, val);
+const nextPool = filtered.length > 0 ? filtered : pool;
+const nextStep = step + 1;
 
-  if (type) results = results.filter(d => d.type === type);
-  if (mood) results = results.filter(d => d.mood === mood);
+```
+if (nextStep >= QUIZ.length || nextPool.length <= 2) {
+  const pick = nextPool[Math.floor(Math.random() * nextPool.length)];
+  setResult(pick);
+} else {
+  setPool(nextPool);
+  setStep(nextStep);
+}
+```
 
-  // fallback if nothing matches
-  if (results.length === 0) {
-    results = DRINK_LIBRARY;
-  }
+};
 
-  results = results.slice(0, 3);
+const restart = () => { setStep(-1); setPool(DRINKS); setResult(null); setShowRecipe(false); };
 
-  setTimeout(() => {
-    el.innerHTML = results.map(d => `
-      <div class="result">
-        <h3>${d.name}</h3>
-        <p>${d.desc}</p>
+return (
+<div style={{
+minHeight: “100vh”,
+background: “#0d0905”,
+fontFamily: “‘Palatino Linotype’, Palatino, ‘Book Antiqua’, Georgia, serif”,
+color: “#f5ede0”,
+display: “flex”,
+flexDirection: “column”,
+alignItems: “center”,
+padding: “0 20px 80px”,
+}}>
+<style>{`@keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } } @keyframes pop  { from { opacity:0; transform:scale(0.94); } to { opacity:1; transform:scale(1); } } .rise { animation: rise 0.38s ease both; } .pop  { animation: pop 0.4s cubic-bezier(.34,1.36,.64,1) both; } button:active { opacity: 0.75 !important; }`}</style>
+
+```
+  <div style={{ width: "100%", maxWidth: 500 }}>
+
+    {/* Header */}
+    <div style={{ textAlign: "center", paddingTop: 52, paddingBottom: 28 }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.35em", textTransform: "uppercase", opacity: 0.35, marginBottom: 8 }}>Eunice Home Café</div>
+      <div style={{ fontSize: "clamp(1.8rem,7vw,2.6rem)", fontStyle: "italic", color: pal.accent, lineHeight: 1, transition: "color 0.6s ease" }}>
+        What'll it be?
       </div>
-    `).join('');
-  }, 600);
+    </div>
+
+    {/* Progress dots */}
+    {step >= 0 && !result && (
+      <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 32 }}>
+        {QUIZ.map((_, i) => (
+          <div key={i} style={{
+            width: i === step ? 20 : 6, height: 6, borderRadius: 99,
+            background: i < step ? pal.accent : i === step ? pal.accent : `${pal.accent}28`,
+            transition: "all 0.3s ease",
+          }} />
+        ))}
+      </div>
+    )}
+
+    {/* Welcome */}
+    {step === -1 && !result && (
+      <div className="rise" style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 20 }}>☕ 🍵 🍸</div>
+        <p style={{ fontSize: 14, lineHeight: 1.85, opacity: 0.55, marginBottom: 32, maxWidth: 320, margin: "0 auto 32px" }}>
+          Answer a few little questions and I'll pick the perfect drink from the house menu — curated just for you.
+        </p>
+        <Btn label="let's find my drink →" accent={pal.accent} onClick={() => setStep(0)} filled />
+      </div>
+    )}
+
+    {/* Question */}
+    {step >= 0 && !result && q && (
+      <div className="rise" key={step}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: "clamp(1.1rem,4.5vw,1.45rem)", fontStyle: "italic", lineHeight: 1.35, marginBottom: 6 }}>
+            {q.question}
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.4, letterSpacing: "0.08em" }}>{q.sub}</div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+          {q.options.map(opt => (
+            <OptionBtn key={opt.value} opt={opt} accent={pal.accent} onClick={() => answer(opt.value)} />
+          ))}
+        </div>
+
+        {step > 0 && (
+          <button
+            onClick={() => setStep(s => s - 1)}
+            style={{ background: "none", border: "none", color: "#f5ede0", opacity: 0.3, cursor: "pointer", fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", display: "block", margin: "22px auto 0", fontFamily: "inherit" }}
+          >← back</button>
+        )}
+      </div>
+    )}
+
+    {/* Result reveal */}
+    {result && !showRecipe && (
+      <div className="pop" style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.3em", textTransform: "uppercase", opacity: 0.35, marginBottom: 12 }}>
+          your drink today
+        </div>
+        <div style={{ fontSize: 70, marginBottom: 14, lineHeight: 1 }}>{result.emoji}</div>
+        <h2 style={{ fontSize: "clamp(1.6rem,6vw,2.2rem)", fontStyle: "italic", fontWeight: 400, color: pal.accent, margin: "0 0 10px", lineHeight: 1.1 }}>
+          {result.name}
+        </h2>
+        <p style={{ fontSize: 14, opacity: 0.55, lineHeight: 1.75, maxWidth: 300, margin: "0 auto 22px" }}>
+          {result.description}
+        </p>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 30 }}>
+          {[result.difficulty, result.time, `serves ${result.servings}`].map(t => (
+            <span key={t} style={{ fontSize: 11, background: `${pal.accent}20`, color: pal.accent, padding: "4px 12px", borderRadius: 99, letterSpacing: "0.08em", textTransform: "uppercase" }}>{t}</span>
+          ))}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 280, margin: "0 auto" }}>
+          <Btn label="see the recipe →" accent={pal.accent} onClick={() => setShowRecipe(true)} filled />
+          <Btn label="try again 🎲" accent={pal.accent} onClick={restart} />
+        </div>
+      </div>
+    )}
+
+    {/* Recipe */}
+    {result && showRecipe && (
+      <RecipeView drink={result} pal={pal} onBack={() => setShowRecipe(false)} onRestart={restart} />
+    )}
+
+  </div>
+</div>
+```
+
+);
 }
 
-</script>
+function OptionBtn({ opt, accent, onClick }) {
+const [hov, setHov] = useState(false);
+return (
+<button
+onClick={onClick}
+onMouseEnter={() => setHov(true)}
+onMouseLeave={() => setHov(false)}
+style={{
+background: hov ? `${accent}1e` : `${accent}09`,
+border: `1px solid ${hov ? accent + "50" : accent + "1e"}`,
+borderRadius: 14, padding: “13px 18px”,
+color: “#f5ede0”, fontSize: 14, cursor: “pointer”,
+textAlign: “left”, transition: “all 0.17s ease”,
+transform: hov ? “translateX(6px)” : “none”,
+fontFamily: “inherit”, display: “flex”, alignItems: “center”, gap: 14,
+}}
+>
+<span style={{ fontSize: 22, flexShrink: 0 }}>{opt.emoji}</span>
+<span style={{ letterSpacing: “-0.01em” }}>{opt.label}</span>
+</button>
+);
+}
 
-</body>
-</html>
+function Btn({ label, accent, onClick, filled }) {
+const [hov, setHov] = useState(false);
+return (
+<button
+onClick={onClick}
+onMouseEnter={() => setHov(true)}
+onMouseLeave={() => setHov(false)}
+style={{
+background: filled ? accent : “transparent”,
+border: `1px solid ${accent}${filled ? "" : "45"}`,
+borderRadius: 99, padding: “12px 26px”,
+color: filled ? “#0d0905” : `${accent}cc`,
+fontSize: 13, fontWeight: filled ? 700 : 400,
+cursor: “pointer”, letterSpacing: “0.04em”,
+fontFamily: “inherit”, transition: “opacity 0.15s”,
+opacity: hov ? 0.82 : 1, width: “100%”,
+}}
+>{label}</button>
+);
+}
+
+function RecipeView({ drink, pal, onBack, onRestart }) {
+const [done, setDone] = useState(new Set());
+const tog = (i) => { const s = new Set(done); s.has(i) ? s.delete(i) : s.add(i); setDone(s); };
+const { accent } = pal;
+
+return (
+<div className="rise">
+<button onClick={onBack} style={{ background: “none”, border: “none”, color: accent, cursor: “pointer”, fontSize: 11, letterSpacing: “0.18em”, textTransform: “uppercase”, marginBottom: 20, padding: 0, fontFamily: “inherit” }}>
+← back
+</button>
+
+```
+  {/* Hero card */}
+  <div style={{ background: `${accent}0e`, border: `1px solid ${accent}25`, borderRadius: 20, padding: "24px 20px", marginBottom: 18 }}>
+    <div style={{ fontSize: 46, marginBottom: 10 }}>{drink.emoji}</div>
+    <h2 style={{ margin: "0 0 8px", fontSize: "1.7rem", fontStyle: "italic", fontWeight: 400, color: accent, lineHeight: 1.1 }}>{drink.name}</h2>
+    <p style={{ margin: "0 0 16px", opacity: 0.5, fontSize: 13, lineHeight: 1.7 }}>{drink.description}</p>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {[drink.difficulty, drink.time, `serves ${drink.servings}`].map(t => (
+        <span key={t} style={{ fontSize: 10, background: `${accent}20`, color: accent, padding: "4px 10px", borderRadius: 99, letterSpacing: "0.08em", textTransform: "uppercase" }}>{t}</span>
+      ))}
+    </div>
+  </div>
+
+  {/* Ingredients */}
+  <div style={{ marginBottom: 18 }}>
+    <div style={{ fontSize: 9, letterSpacing: "0.25em", textTransform: "uppercase", opacity: 0.35, marginBottom: 10 }}>Ingredients</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      {drink.ingredients.map((ing, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: `${accent}08`, borderRadius: 10, fontSize: 13 }}>
+          <span style={{ color: accent, fontSize: 9 }}>◆</span>{ing}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  {/* Steps */}
+  <div style={{ marginBottom: 18 }}>
+    <div style={{ fontSize: 9, letterSpacing: "0.25em", textTransform: "uppercase", opacity: 0.35, marginBottom: 10 }}>Method</div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+      {drink.steps.map((s, i) => (
+        <button key={i} onClick={() => tog(i)} style={{
+          display: "flex", gap: 12, alignItems: "flex-start",
+          padding: "12px 13px",
+          background: done.has(i) ? `${accent}18` : `${accent}06`,
+          border: `1px solid ${done.has(i) ? accent + "40" : "transparent"}`,
+          borderRadius: 12, cursor: "pointer", textAlign: "left",
+          color: "#f5ede0", transition: "all 0.18s",
+          opacity: done.has(i) ? 0.5 : 1, width: "100%", fontFamily: "inherit",
+        }}>
+          <div style={{
+            minWidth: 21, height: 21, borderRadius: "50%",
+            background: done.has(i) ? accent : "transparent",
+            border: `1.5px solid ${accent}`, display: "flex",
+            alignItems: "center", justifyContent: "center",
+            fontSize: 9, color: done.has(i) ? "#0d0905" : accent,
+            fontWeight: 700, flexShrink: 0, marginTop: 2, transition: "all 0.2s",
+          }}>
+            {done.has(i) ? "✓" : i + 1}
+          </div>
+          <span style={{ fontSize: 13, lineHeight: 1.65, textDecoration: done.has(i) ? "line-through" : "none" }}>{s}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* Tip */}
+  {drink.tip && (
+    <div style={{ borderLeft: `3px solid ${accent}`, padding: "12px 16px", fontSize: 12, lineHeight: 1.7, opacity: 0.7, marginBottom: 26, background: `${accent}08`, borderRadius: "0 10px 10px 0" }}>
+      <span style={{ color: accent, fontWeight: 700 }}>Tip: </span>{drink.tip}
+    </div>
+  )}
+
+  <Btn label="find another drink 🎲" accent={accent} onClick={onRestart} />
+</div>
+```
+
+);
+}
