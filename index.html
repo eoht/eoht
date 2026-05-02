@@ -1,410 +1,283 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eunice Home Café</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root {
-    --cream: #F5EDD8;
-    --caramel: #C17F3A;
-    --gold: #D4A853;
-    --matcha: #7A9E5F;
-    --midnight: #160F06;
-    --surface: #1E1509;
-    --surface2: #261B0A;
-    --border: rgba(212,168,83,0.15);
-    --text-dim: rgba(245,237,216,0.4);
-    --text-mid: rgba(245,237,216,0.65);
-  }
-
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-html, body {
-height: 100%;
-background: var(--midnight);
-font-family: 'DM Sans', sans-serif;
-color: var(--cream);
-overflow-x: hidden;
+:root {
+  --cream: #F5EDD8;
+  --gold: #D4A853;
+  --matcha: #7A9E5F;
+  --midnight: #160F06;
+  --surface: #1E1509;
 }
 
-body::after {
-content: '';
-position: fixed;
-inset: 0;
-background:
-radial-gradient(ellipse 70% 40% at 15% 5%, rgba(193,127,58,0.2) 0%, transparent 55%),
-radial-gradient(ellipse 50% 35% at 85% 90%, rgba(122,158,95,0.1) 0%, transparent 50%);
-pointer-events: none;
-z-index: 0;
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--midnight);
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
 }
 
 .app {
-position: relative;
-z-index: 1;
-max-width: 430px;
-margin: 0 auto;
-min-height: 100vh;
-display: flex;
-flex-direction: column;
-padding-bottom: 40px;
+  max-width: 420px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.step { margin-bottom: 20px; }
+
+.opt-btn {
+  display:block;
+  width:100%;
+  margin:6px 0;
+  padding:12px;
+  border-radius:10px;
+  border:1px solid #555;
+  background:#222;
+  color:#eee;
+}
+
+.opt-btn.selected {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.generate-btn {
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:12px;
+  background: var(--gold);
+  color:black;
+  font-weight:bold;
+  margin-top:20px;
+}
+
+.result {
+  margin-top:20px;
+  padding:15px;
+  background: var(--surface);
+  border-radius:12px;
 }
 </style>
 </head>
+
 <body>
+
 <div class="app">
 
-  <div class="header">
-    <div class="logo-mark">
-      <div class="logo-line"></div>
-      <div class="logo-icon">☕</div>
-      <div class="logo-line"></div>
-    </div>
-    <h1>Eunice<br><span>Home Café</span></h1>
-    <div class="header-sub">Your personal barista, anytime</div>
-  </div>
+<h1>Eunice Home Café</h1>
 
-  <div class="progress-bar" id="progressBar">
-    <div class="prog-dot active" id="pd1"></div>
-    <div class="prog-dot" id="pd2"></div>
-    <div class="prog-dot" id="pd3"></div>
-    <div class="prog-dot" id="pd4"></div>
-  </div>
+<div class="step">
+  <p>Drink type</p>
+  <button class="opt-btn" onclick="pick(this,'coffee')">Coffee</button>
+  <button class="opt-btn" onclick="pick(this,'matcha')">Matcha</button>
+  <button class="opt-btn" onclick="pick(this,'tea')">Tea</button>
+  <button class="opt-btn" onclick="pick(this,'cocktail')">Cocktail</button>
+</div>
 
-  <div class="steps-wrap">
+<div class="step">
+  <p>Mood</p>
+  <button class="opt-btn" onclick="pick(this,'cozy')">Cozy</button>
+  <button class="opt-btn" onclick="pick(this,'refreshing')">Fresh</button>
+  <button class="opt-btn" onclick="pick(this,'indulgent')">Indulgent</button>
+  <button class="opt-btn" onclick="pick(this,'energizing')">Energizing</button>
+</div>
 
-<!-- STEP UI UNCHANGED (omitted for brevity, same as user provided) -->
+<button class="generate-btn" onclick="generate()">Craft Menu</button>
 
-  </div>
-
-  <button class="generate-btn" id="generateBtn" onclick="generateDrinks()" style="display:none">
-    ✦ Craft Eunice's Menu ✦
-  </button>
-
-  <div class="results-section" id="resultsSection">
-    <div class="results-label">
-      <div class="results-title">Today's Menu</div>
-      <div class="results-meta" id="resultsMeta"></div>
-    </div>
-    <div id="drinksList"></div>
-    <button class="reset-btn" onclick="resetAll()">↺ Start over</button>
-  </div>
+<div id="results"></div>
 
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-// DRINK LIBRARY (LOCAL — NO API)
-// ─────────────────────────────────────────────
 
+// ─────────────────────────────
+// FULL DRINK LIBRARY
+// ─────────────────────────────
 const DRINK_LIBRARY = [
 {
   name: "Velvet Oat Latte",
   type: "coffee",
   mood: "cozy",
-  emoji: "☕",
-  base: "espresso",
-  milk: "oat milk",
-  sweet: "brown sugar",
-  extras: ["cinnamon", "ice"],
-  tags: ["warm", "soft", "comfort"]
+  desc: "Warm oat latte with soft cinnamon finish."
 },
 {
   name: "Iced Caramel Cloud Latte",
   type: "coffee",
   mood: "indulgent",
-  emoji: "☕",
-  base: "espresso",
-  milk: "whole milk",
-  sweet: "caramel syrup",
-  extras: ["vanilla foam", "ice"],
-  tags: ["rich", "dessert-like"]
+  desc: "Sweet caramel espresso with creamy foam."
 },
 {
   name: "Midnight Cold Brew",
   type: "coffee",
   mood: "energizing",
-  emoji: "☕",
-  base: "cold brew",
-  milk: null,
-  sweet: "vanilla syrup",
-  extras: ["ice", "sea salt"],
-  tags: ["strong", "bold"]
+  desc: "Bold cold brew with vanilla and sea salt."
 },
 {
   name: "Honey Cinnamon Latte",
   type: "coffee",
   mood: "cozy",
-  emoji: "☕",
-  base: "espresso",
-  milk: "almond milk",
-  sweet: "honey",
-  extras: ["cinnamon"],
-  tags: ["warm", "spiced"]
+  desc: "Smooth espresso with honey spice warmth."
 },
 {
   name: "Dirty Vanilla Latte",
   type: "coffee",
   mood: "energizing",
-  emoji: "☕",
-  base: "espresso",
-  milk: "whole milk",
-  sweet: "vanilla syrup",
-  extras: ["ice"],
-  tags: ["strong", "smooth"]
+  desc: "Strong espresso with soft vanilla milk."
 },
 {
   name: "Ceremonial Matcha Cloud",
   type: "matcha",
-  mood: "calm",
-  emoji: "🍵",
-  base: "matcha shot",
-  milk: "oat milk",
-  sweet: "honey",
-  extras: ["vanilla foam"],
-  tags: ["airy", "soft"]
+  mood: "cozy",
+  desc: "Light airy matcha with oat milk foam."
 },
 {
   name: "Iced Strawberry Matcha",
   type: "matcha",
   mood: "refreshing",
-  emoji: "🍵",
-  base: "matcha shot",
-  milk: "almond milk",
-  sweet: "vanilla syrup",
-  extras: ["ice", "strawberry"],
-  tags: ["fruity", "bright"]
+  desc: "Fruity matcha with strawberry brightness."
 },
 {
   name: "Dirty Matcha Latte",
   type: "matcha",
   mood: "energizing",
-  emoji: "🍵",
-  base: "espresso + matcha",
-  milk: "oat milk",
-  sweet: "brown sugar",
-  extras: ["ice"],
-  tags: ["bold", "caffeine mix"]
+  desc: "Bold espresso meets earthy matcha."
 },
 {
   name: "Brown Sugar Matcha Latte",
   type: "matcha",
   mood: "indulgent",
-  emoji: "🍵",
-  base: "matcha shot",
-  milk: "whole milk",
-  sweet: "brown sugar",
-  extras: ["boba", "ice"],
-  tags: ["chewy", "sweet"]
+  desc: "Sweet brown sugar with chewy boba."
 },
 {
   name: "Jasmine Milk Tea Latte",
   type: "tea",
   mood: "cozy",
-  emoji: "🫖",
-  base: "jasmine tea",
-  milk: "whole milk",
-  sweet: "honey",
-  extras: ["ice"],
-  tags: ["floral", "soft"]
+  desc: "Floral jasmine tea with creamy milk."
 },
 {
   name: "Brown Sugar Boba Milk Tea",
   type: "tea",
   mood: "indulgent",
-  emoji: "🫖",
-  base: "black tea",
-  milk: "whole milk",
-  sweet: "brown sugar",
-  extras: ["boba", "ice"],
-  tags: ["chewy", "rich"]
+  desc: "Rich milk tea with caramel boba."
 },
 {
   name: "Oolong Cream Tea",
   type: "tea",
   mood: "refreshing",
-  emoji: "🫖",
-  base: "oolong tea",
-  milk: "oat milk",
-  sweet: "vanilla syrup",
-  extras: ["ice"],
-  tags: ["smooth", "balanced"]
+  desc: "Smooth oolong with vanilla cream notes."
 },
 {
   name: "Earl Grey Velvet Tea",
   type: "tea",
   mood: "cozy",
-  emoji: "🫖",
-  base: "earl grey",
-  milk: "almond milk",
-  sweet: "honey",
-  extras: ["cinnamon"],
-  tags: ["floral", "aromatic"]
+  desc: "Aromatic Earl Grey with soft milk finish."
 },
 {
   name: "Yuzu Gin Spritz",
   type: "cocktail",
   mood: "refreshing",
-  emoji: "🍸",
-  base: "gin",
-  milk: null,
-  sweet: "yuzu",
-  extras: ["soda water", "ice"],
-  tags: ["citrus", "bright"]
+  desc: "Citrus gin spritz with sparkling soda."
 },
 {
   name: "Vanilla Rum Sunset",
   type: "cocktail",
   mood: "indulgent",
-  emoji: "🍸",
-  base: "rum",
-  milk: null,
-  sweet: "vanilla syrup",
-  extras: ["orange", "ice"],
-  tags: ["sweet", "warm"]
+  desc: "Warm vanilla rum with orange glow."
 },
 {
   name: "Espresso Martini Twist",
   type: "cocktail",
   mood: "energizing",
-  emoji: "🍸",
-  base: "vodka + espresso",
-  milk: null,
-  sweet: "coffee liqueur",
-  extras: ["ice"],
-  tags: ["strong", "bold"]
+  desc: "Bold coffee cocktail with vodka kick."
 },
 {
   name: "Honey Whiskey Highball",
   type: "cocktail",
   mood: "cozy",
-  emoji: "🍸",
-  base: "whiskey",
-  milk: null,
-  sweet: "honey",
-  extras: ["soda water", "ice"],
-  tags: ["smooth", "warm"]
+  desc: "Smooth whiskey with honey warmth."
 },
 {
   name: "Rose Vanilla Cloud Latte",
   type: "coffee",
   mood: "indulgent",
-  emoji: "✨",
-  base: "espresso",
-  milk: "oat milk",
-  sweet: "vanilla syrup",
-  extras: ["rose water", "foam"],
-  tags: ["perfumed", "luxury"]
+  desc: "Floral rose latte with vanilla foam."
 },
 {
   name: "Lavender Night Tea",
   type: "tea",
-  mood: "calm",
-  emoji: "🌙",
-  base: "jasmine tea",
-  milk: null,
-  sweet: "lavender syrup",
-  extras: ["honey"],
-  tags: ["soothing", "sleepy"]
+  mood: "cozy",
+  desc: "Calming lavender tea for slow nights."
 },
 {
   name: "Coconut Cloud Cold Brew",
   type: "coffee",
   mood: "refreshing",
-  emoji: "🥥",
-  base: "cold brew",
-  milk: "coconut milk",
-  sweet: "vanilla syrup",
-  extras: ["ice"],
-  tags: ["tropical", "light"]
+  desc: "Tropical coconut cold brew latte."
 }
 ];
 
-// ─────────────────────────────────────────────
-// FILTER ENGINE (REPLACES API)
-// ─────────────────────────────────────────────
+// ─────────────────────────────
+// STATE
+// ─────────────────────────────
+let selections = {};
 
-function scoreDrink(d) {
-  let score = 0;
+// FIXED PICK LOGIC
+function pick(btn, val){
+  const group = btn.parentElement;
+  group.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
 
-  if (!state.type || state.type === 'any') score += 1;
-  else if (d.type === state.type) score += 3;
-
-  if (state.mood && d.mood === state.mood) score += 3;
-
-  const ingr = [...state.ingredients];
-  ingr.forEach(i => {
-    if ((d.base && d.base.includes(i.toLowerCase())) ||
-        (d.sweet && d.sweet.includes(i.toLowerCase())) ||
-        (d.extras && d.extras.join(' ').toLowerCase().includes(i.toLowerCase())) ||
-        (d.milk && d.milk.includes(i.toLowerCase()))) {
-      score += 1;
-    }
-  });
-
-  if (state.alcohol === 'non-alcoholic' && d.type === 'cocktail') score -= 10;
-  if (state.alcohol === 'alcoholic' && d.type !== 'cocktail') score -= 2;
-
-  return score;
+  const label = group.children[0].innerText.trim(); // "Drink type" / "Mood"
+  selections[label] = val;
 }
 
-function generateDrinks() {
-  const btn = document.getElementById('generateBtn');
-  const results = document.getElementById('resultsSection');
-  const list = document.getElementById('drinksList');
+// ─────────────────────────────
+// FILTER ENGINE (NO API)
+// ─────────────────────────────
+function generate(){
+  const el = document.getElementById('results');
+  el.innerHTML = "Brewing... ☕";
 
-  btn.disabled = true;
-  btn.textContent = '✦ Brewing your menu…';
+  const type = selections["Drink type"];
+  const mood = selections["Mood"];
 
-  results.classList.add('visible');
-  list.innerHTML = `<div class="loading-card">Brewing from your café library… ☕</div>`;
+  let results = DRINK_LIBRARY;
 
-  const sorted = [...DRINK_LIBRARY]
-    .map(d => ({ ...d, score: scoreDrink(d) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3);
+  if (type) results = results.filter(d => d.type === type);
+  if (mood) results = results.filter(d => d.mood === mood);
+
+  // fallback if nothing matches
+  if (results.length === 0) {
+    results = DRINK_LIBRARY;
+  }
+
+  results = results.slice(0, 3);
 
   setTimeout(() => {
-    renderDrinks(sorted.map(d => ({
-      name: d.name,
-      emoji: d.emoji,
-      type: d.type,
-      isAlcoholic: d.type === 'cocktail',
-      description: `A ${d.mood} ${d.type} crafted from your selected ingredients.`,
-      ingredients: d.extras,
-      steps: ["Mix ingredients", "Serve with ice", "Enjoy"]
-    })));
-
-    document.getElementById('resultsMeta').textContent = 'Top 3 drinks from your café library';
-
-    btn.disabled = false;
-    btn.textContent = '✦ Craft Eunice\'s Menu ✦';
+    el.innerHTML = results.map(d => `
+      <div class="result">
+        <h3>${d.name}</h3>
+        <p>${d.desc}</p>
+      </div>
+    `).join('');
   }, 600);
 }
-
-function renderDrinks(drinks) {
-  const list = document.getElementById('drinksList');
-  list.innerHTML = drinks.map((d, i) => `
-    <div class="drink-card">
-      <div class="dc-top">
-        <div class="dc-emoji">${d.emoji}</div>
-        <div class="dc-info">
-          <div class="dc-name">${d.name}</div>
-        </div>
-      </div>
-      <div class="dc-body">
-        <div class="dc-desc">${d.description}</div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function resetAll() { location.reload(); }
 
 </script>
 
 </body>
 </html>
-
